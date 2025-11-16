@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quiz Master – Final Working Version</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* =======================================================================================
+           GLOBAL THEME VARIABLES
+           ======================================================================================= */
+
+        :root {
+            --primary: #4e54c8;
+            --accent: #8f94fb;
+            --secondary: #ff9ff3;
+            --secondary-accent: #ff6b81;
+            --light: #ffffff;
+            --dark: #2c3e50;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --warning: #ffa726;
+
+            --bg: linear-gradient(135deg, var(--primary), var(--accent));
+            --glass: rgba(255, 255, 255, 0.15);
+            --glass-strong: rgba(255, 255, 255, 0.25);
+
+            --radius: 20px;
+
+            --shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+            --transition: all 0.3s ease;
+            --glow: 0 0 20px rgba(79, 85, 200, 0.4);
+        }
+
+        /* =======================================================================================
+           RESET + BASE
+           ======================================================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            font-family: "Poppins", sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+        }
+
+        /* =======================================================================================
+           APP CONTAINER
+           ======================================================================================= */
+
+        .app {
+            width: min(950px, 95vw);
+            background: var(--glass-strong);
+            backdrop-filter: blur(18px);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: var(--transition);
+        }
+
+        .app:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* =======================================================================================
+           HEADERS
+           ======================================================================================= */
+
+        header {
+            padding: 20px 26px;
+            background: var(--glass);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* =======================================================================================
+           MAIN AREA
+           ======================================================================================= */
+
+        main {
+            padding: 26px;
+            color: #ffffff;
+        }
+
+        /* =======================================================================================
+           FORM ELEMENTS
+           ======================================================================================= */
+
+        input,
+        textarea,
+        select,
+        button {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.95);
+            margin: 8px 0;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: var(--glow);
+            outline: none;
+        }
+
+        /* =======================================================================================
+           BUTTONS
+           ======================================================================================= */
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        button:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            filter: none;
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-accent));
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+        }
+
+        /* =======================================================================================
+           QUESTION BUILDER (TEACHER SIDE)
+           ======================================================================================= */
+
+        .question-item {
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: var(--radius);
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            color: var(--dark);
+        }
+
+        .question-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .question-item textarea,
+        .question-item input,
+        .question-item select {
+            background: #ffffff;
+        }
+
+        /* =======================================================================================
+           SHARE LINK BOX
+           ======================================================================================= */
+
+        #shareSection {
+            margin-top: 18px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 16px;
+            border-radius: var(--radius);
+            color: #000000;
+        }
+
+        #shareLink {
+            font-family: monospace;
+            background: #ffffff;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            margin-top: 8px;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+
+        /* =======================================================================================
+           QUIZ PLAYER (STUDENT SIDE)
+           ======================================================================================= */
+
+        #qtext {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            width: 100%;
+            word-wrap: break-word;
+        }
+
+        #qwrap {
+            width: 100%;
+        }
+
+        /* IMPORTANT: remove default fieldset styling that adds padding + border and causes shifting */
+        #qform {
+            margin: 0;
+            padding: 0;
+        }
+
+        #options {
+            margin: 0;
+            padding: 0;
+            border: none;
+            /* remove default fieldset border */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* SINGLE OPTION STYLE – this fixes the alignment issue completely */
+        #options .option {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+
+            width: 100%;
+            box-sizing: border-box;
+
+            padding: 12px 16px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 2px solid rgba(124, 129, 255, 0.35);
+
+            cursor: pointer;
+            transition: var(--transition);
+
+            text-align: left;
+            color: #000000;
+        }
+
+        #options .option:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        #options .option input {
+            flex-shrink: 0;
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        #options .option span {
+            flex: 1;
+            display: block;
+            color: #000000;
+            white-space: normal;
+            word-wrap: break-word;
+            text-align: left;
+        }
+
+        /* =======================================================================================
+           ANSWER FEEDBACK COLORS (OPTIONAL)
+           ======================================================================================= */
+
+        .option.correct {
+            background: rgba(46, 213, 115, 0.14);
+            border-color: var(--success);
+        }
+
+        .option.wrong {
+            background: rgba(255, 71, 87, 0.14);
+            border-color: var(--danger);
+        }
+
+        #feedback {
+            margin-top: 10px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        /* =======================================================================================
+           FOOTER (SCORE + QUIT)
+           ======================================================================================= */
+
+        footer {
+            padding: 14px 24px;
+            background: var(--glass);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        footer strong {
+            font-weight: 700;
+        }
+
+        /* =======================================================================================
+           END SCREEN
+           ======================================================================================= */
+
+        #finalHeading {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        #finalMeta {
+            margin-bottom: 10px;
+        }
+
+        #summary {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px;
+            border-radius: var(--radius);
+            color: #000000;
+            line-height: 1.5;
+        }
+
+        #summary div {
+            margin-bottom: 10px;
+        }
+
+        /* =======================================================================================
+           RESPONSIVE
+           ======================================================================================= */
+
+        @media (max-width: 600px) {
+
+            .app {
+                width: 95%;
+            }
+
+            #options .option {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+
+            header {
+                padding: 16px 18px;
+            }
+
+            main {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =======================================================================================
+         CREATE QUIZ SCREEN (TEACHER)
+         ======================================================================================= -->
+
+    <div class="app" id="createScreen">
+        <header>
+            <h2>Create Quiz</h2>
+            <span style="color:#ffffff; font-weight:500; font-size:0.9rem;">Admin Panel</span>
+        </header>
+
+        <main>
+            <!-- Quiz title input -->
+            <input type="text" id="quizTitleInput" placeholder="Quiz Title (e.g., Mid Term – DBMS)" />
+
+            <!-- Where questions will be added -->
+            <div id="questionCreator"></div>
+
+            <!-- Buttons to add question + generate link -->
+            <button id="addQuestionBtn">Add Question</button>
+            <button id="saveQuizBtn">Generate Shareable Link</button>
+
+            <!-- Share section appears after quiz is created -->
+            <div id="shareSection" hidden>
+                <h3 style="color:#2c3e50;">Share this Quiz with Students:</h3>
+                <div id="shareLink"></div>
+                <br />
+                <button id="copyLinkBtn" class="secondary">Copy Link</button>
+                <button id="previewBtn" class="secondary">Preview Quiz</button>
+            </div>
+
+            <hr style="margin:24px 0; border:none; border-top:1px solid rgba(255,255,255,0.4);" />
+
+            <!-- Admin tools block -->
+            <div>
+                <h3>Admin Tools</h3>
+                <p style="margin:0 0 10px 0;">Use these tools after students submit quizzes.</p>
+                <button class="secondary" id="exportBtn">Export Results to Excel</button>
+                <button class="danger" id="clearBtn">Clear All Results from Database</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- =======================================================================================
+         STUDENT LOGIN SCREEN
+         ======================================================================================= -->
+
+    <div class="app" id="studentInfoApp" hidden>
+        <header>
+            <h2>Student Login</h2>
+            <span style="color:#ffffff;">Enter details to start quiz</span>
+        </header>
+
+        <main>
+            <input id="studentName" placeholder="Your Name" />
+            <input id="studentId" placeholder="Your Student ID / Roll No." />
+            <button id="startQuizBtn">Start Quiz</button>
+        </main>
+    </div>
+
+    <!-- =======================================================================================
+         QUIZ PLAYER SCREEN (QUESTION VIEW)
+         ======================================================================================= -->
+
+    <div class="app" id="quizApp" hidden>
+        <header>
+            <strong id="quizTitle" style="color:#ffffff;">Quiz</strong>
+            <span id="statusPill" style="color:#ffffff; font-weight:500;">Q1</span>
+        </header>
+
+        <main>
+            <div id="qwrap">
+                <!-- Question text -->
+                <div id="qtext"></div>
+
+                <!-- Options form -->
+                <form id="qform">
+                    <fieldset id="options"></fieldset>
+                </form>
+
+                <!-- feedback text (optional) -->
+                <div id="feedback"></div>
+
+                <!-- Submit button -->
+                <button id="submitBtn" disabled>Submit</button>
+            </div>
+        </main>
+
+        <footer>
+            <div>
+                Score:
+                <strong id="scoreMini">0</strong>
+            </div>
+            <button id="quitBtn" class="danger">Quit</button>
+        </footer>
+    </div>
+
+    <!-- =======================================================================================
+         END OF QUIZ SCREEN
+         ======================================================================================= -->
+
+    <div class="app" id="endScreen" hidden>
+        <header>
+            <h2>Quiz Completed</h2>
+            <span style="color:#ffffff;">Summary</span>
+        </header>
+
+        <main class="score">
+            <h2 id="finalHeading"></h2>
+            <div id="finalMeta"></div>
+            <div id="summary"></div>
+            <br />
+            <button id="restartBtn">Create / Load Another Quiz</button>
+        </main>
+    </div>
+
+    <!-- =======================================================================================
+         TEMPLATE – OPTION (USED BY JS)
+         ======================================================================================= -->
+
+    <template id="option-template">
+        <label class="option">
+            <input type="radio" name="option" />
+            <span class="text"></span>
+        </label>
+    </template>
+
+    <!-- =======================================================================================
+         LIBRARIES: FIREBASE + XLSX
+         ======================================================================================= -->
+
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- SheetJS (xlsx) for exporting Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- =======================================================================================
+         MAIN SCRIPT
+         ======================================================================================= -->
+
+    <script>
+        // ======================================================================================
+        // 1. FIREBASE CONFIG – USE YOUR OWN REALTIME DATABASE CONFIG HERE
+        // ======================================================================================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8ApxNg7n36rqCPlkDe0pSP1D1MEdNlgQ",
+            authDomain: "quiz-app-15500.firebaseapp.com",
+            databaseURL: "https://quiz-app-15500-default-rtdb.firebaseio.com",
+            projectId: "quiz-app-15500",
+            storageBucket: "quiz-app-15500.firebasestorage.app",
+            messagingSenderId: "391234146966",
+            appId: "1:391234146966:web:7c388385a80fe43e78e8b7",
+            measurementId: "G-TQVKN2WGWN"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ======================================================================================
+        // 2. GLOBAL STATE
+        // ======================================================================================
+
+        let gameQuestions = [];    // array of { q, options[], answer }
+        let quizTitle = "";        // quiz title string
+        let i = 0;                 // current question index
+        let score = 0;             // student score
+        let isPreview = false;     // flag: true when admin is previewing
+
+        const createScreen = document.getElementById("createScreen");
+        const studentInfoApp = document.getElementById("studentInfoApp");
+        const quizApp = document.getElementById("quizApp");
+        const endScreen = document.getElementById("endScreen");
+
+        const submitBtn = document.getElementById("submitBtn");
+        const scoreMini = document.getElementById("scoreMini");
+        const feedbackBox = document.getElementById("feedback");
+
+        // ======================================================================================
+        // 3. RENDER QUESTION TO STUDENT VIEW
+        // ======================================================================================
+
+        const renderQuestion = () => {
+            const qObj = gameQuestions[i];
+
+            if (!qObj) return;
+
+            // Set question text
+            const qTextEl = document.getElementById("qtext");
+            qTextEl.textContent = qObj.q;
+
+            // Update Q status (Qx/N)
+            const statusPill = document.getElementById("statusPill");
+            statusPill.textContent = `Q${i + 1}/${gameQuestions.length}`;
+
+            // Clear feedback
+            feedbackBox.textContent = "";
+
+            // Clear options container
+            const optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+
+            // For each option, clone the template and attach it
+            qObj.options.forEach((optText, idx) => {
+                const node = document
+                    .getElementById("option-template")
+                    .content
+                    .cloneNode(true);
+
+                const labelEl = node.querySelector("label.option");
+                const radioEl = node.querySelector("input[type='radio']");
+                const spanEl = node.querySelector("span.text");
+
+                // Set text
+                spanEl.textContent = optText;
+
+                // Set value of radio
+                radioEl.value = idx;
+
+                // When user selects, enable submit
+                radioEl.onclick = () => {
+                    submitBtn.disabled = false;
+                };
+
+                optionsContainer.appendChild(labelEl);
+            });
+
+            // Disable submit until an option is selected
+            submitBtn.disabled = true;
+        };
+
+        // ======================================================================================
+        // 4. START QUIZ (CALLED FROM PREVIEW + STUDENT LOGIN)
+        // ======================================================================================
+
+        const startQuiz = () => {
+            // Reset counters
+            i = 0;
+            score = 0;
+            scoreMini.textContent = "0";
+
+            // Show the quiz UI
+            createScreen.hidden = true;
+            studentInfoApp.hidden = true;
+            quizApp.hidden = false;
+            endScreen.hidden = false; // will be hidden again, but ensures layout
+
+            // Set quiz title
+            document.getElementById("quizTitle").textContent = quizTitle;
+
+            // Render first question
+            renderQuestion();
+        };
+
+        // ======================================================================================
+        // 5. END QUIZ – SAVE TO FIREBASE (IF NOT PREVIEW)
+        // ======================================================================================
+
+        const endQuiz = () => {
+            quizApp.hidden = true;
+            endScreen.hidden = false;
+
+            // Save results only for real students, not preview
+            if (!isPreview) {
+                const studentData = {
+                    name: sessionStorage.getItem("studentName"),
+                    id: sessionStorage.getItem("studentId"),
+                    score: score,
+                    total: gameQuestions.length,
+                    quizTitle: quizTitle,
+                    date: new Date().toLocaleString()
+                };
+
+                db.ref("quizResults/" + Date.now()).set(studentData);
+            }
+
+            // Heading text
+            const finalHeading = document.getElementById("finalHeading");
+            if (isPreview) {
+                finalHeading.textContent =
+                    `Preview Finished – Score: ${score}/${gameQuestions.length}`;
+            } else {
+                finalHeading.textContent =
+                    `You scored ${score} out of ${gameQuestions.length}`;
+            }
+
+            // Meta info
+            const finalMeta = document.getElementById("finalMeta");
+            finalMeta.textContent = `Quiz: ${quizTitle}`;
+
+            // Summary of correct answers
+            const summaryDiv = document.getElementById("summary");
+            summaryDiv.innerHTML = gameQuestions
+                .map((q, idx) => {
+                    const correct = q.options[q.answer];
+                    return `<div><strong>Q${idx + 1}:</strong> ${q.q}<br /><em>Answer:</em> ${correct}</div>`;
+                })
+                .join("");
+        };
+
+        // ======================================================================================
+        // 6. HANDLE SUBMIT BUTTON CLICK
+        // ======================================================================================
+
+        submitBtn.onclick = () => {
+            // Find selected option
+            const selected = document.querySelector("input[name='option']:checked");
+            if (!selected) {
+                alert("Please select an answer!");
+                return;
+            }
+
+            // Compare with correct answer
+            const chosenIndex = Number(selected.value);
+            const correctIndex = gameQuestions[i].answer;
+
+            // Optional visual feedback
+            const optionLabels = document.querySelectorAll("#options .option");
+            optionLabels.forEach((labelEl, index) => {
+                labelEl.classList.remove("correct", "wrong");
+                if (index === correctIndex) {
+                    labelEl.classList.add("correct");
+                }
+                if (index === chosenIndex && chosenIndex !== correctIndex) {
+                    labelEl.classList.add("wrong");
+                }
+            });
+
+            if (chosenIndex === correctIndex) {
+                score++;
+                feedbackBox.textContent = "Correct ✅";
+            } else {
+                feedbackBox.textContent = "Incorrect ❌";
+            }
+
+            scoreMini.textContent = String(score);
+
+            // Move to next question after a short delay for feedback
+            setTimeout(() => {
+                i++;
+                if (i >= gameQuestions.length) {
+                    endQuiz();
+                } else {
+                    renderQuestion();
+                }
+            }, 600);
+        };
+
+        // ======================================================================================
+        // 7. BUTTONS: QUIT + RESTART
+        // ======================================================================================
+
+        document.getElementById("quitBtn").onclick = () => {
+            location.reload();
+        };
+
+        document.getElementById("restartBtn").onclick = () => {
+            location.reload();
+        };
+
+        // ======================================================================================
+        // 8. TEACHER: ADD QUESTION BUTTON
+        // ======================================================================================
+
+        document.getElementById("addQuestionBtn").onclick = () => {
+            const container = document.getElementById("questionCreator");
+
+            const div = document.createElement("div");
+            div.className = "question-item";
+
+            div.innerHTML = `
+                <textarea class="qtext" placeholder="Question text"></textarea>
+                <input class="opt1" placeholder="Option 1" />
+                <input class="opt2" placeholder="Option 2" />
+                <input class="opt3" placeholder="Option 3" />
+                <input class="opt4" placeholder="Option 4" />
+                <select class="correct">
+                    <option value="0">Correct: Option 1</option>
+                    <option value="1">Correct: Option 2</option>
+                    <option value="2">Correct: Option 3</option>
+                    <option value="3">Correct: Option 4</option>
+                </select>
+            `;
+
+            container.appendChild(div);
+        };
+
+        // ======================================================================================
+        // 9. TEACHER: SAVE QUIZ + GENERATE LINK
+        // ======================================================================================
+
+        document.getElementById("saveQuizBtn").onclick = () => {
+            const titleInput = document.getElementById("quizTitleInput");
+            const title = titleInput.value.trim();
+
+            if (!title) {
+                alert("Please enter a quiz title!");
+                titleInput.focus();
+                return;
+            }
+
+            quizTitle = title;
+
+            // Build questions array
+            const qEls = document.querySelectorAll(".question-item");
+            const questions = [];
+
+            qEls.forEach((el) => {
+                const qText = el.querySelector(".qtext").value.trim();
+                const opt1 = el.querySelector(".opt1").value.trim();
+                const opt2 = el.querySelector(".opt2").value.trim();
+                const opt3 = el.querySelector(".opt3").value.trim();
+                const opt4 = el.querySelector(".opt4").value.trim();
+                const correct = Number(el.querySelector(".correct").value);
+
+                if (!qText || !opt1 || !opt2 || !opt3 || !opt4) {
+                    return;
+                }
+
+                questions.push({
+                    q: qText,
+                    options: [opt1, opt2, opt3, opt4],
+                    answer: correct
+                });
+            });
+
+            if (!questions.length) {
+                alert("Add at least one complete question with 4 options.");
+                return;
+            }
+
+            gameQuestions = questions;
+
+            const payload = {
+                title: quizTitle,
+                questions: gameQuestions
+            };
+
+            const encoded = btoa(JSON.stringify(payload));
+            const link = `${location.origin}${location.pathname}#${encoded}`;
+
+            const shareLinkDiv = document.getElementById("shareLink");
+            shareLinkDiv.textContent = link;
+
+            document.getElementById("shareSection").hidden = false;
+            alert("Quiz link generated successfully!");
+        };
+
+        // ======================================================================================
+        // 10. COPY LINK BUTTON
+        // ======================================================================================
+
+        document.getElementById("copyLinkBtn").onclick = () => {
+            const text = document.getElementById("shareLink").textContent;
+            if (!text) {
+                alert("No link to copy!");
+                return;
+            }
+            navigator.clipboard.writeText(text);
+            alert("Quiz link copied to clipboard.");
+        };
+
+        // ======================================================================================
+        // 11. PREVIEW BUTTON (ADMIN)
+        // ======================================================================================
+
+        document.getElementById("previewBtn").onclick = () => {
+            if (!gameQuestions.length) {
+                alert("Please generate the quiz first.");
+                return;
+            }
+            isPreview = true;
+            startQuiz();
+        };
+
+        // ======================================================================================
+        // 12. ON PAGE LOAD – CHECK IF THERE IS A QUIZ LINK HASH
+        // ======================================================================================
+
+        window.onload = () => {
+            const hash = location.hash.slice(1);
+            if (hash) {
+                try {
+                    const data = JSON.parse(atob(hash));
+                    gameQuestions = data.questions || [];
+                    quizTitle = data.title || "Quiz";
+
+                    createScreen.hidden = true;
+                    studentInfoApp.hidden = false;
+                    quizApp.hidden = true;
+                    endScreen.hidden = true;
+                } catch (err) {
+                    console.error("Failed to parse quiz from URL:", err);
+                    alert("Invalid quiz link.");
+                }
+            }
+        };
+
+        // ======================================================================================
+        // 13. STUDENT LOGIN – AFTER ENTERING NAME + ID
+        // ======================================================================================
+
+        document.getElementById("startQuizBtn").onclick = () => {
+            const name = document.getElementById("studentName").value.trim();
+            const id = document.getElementById("studentId").value.trim();
+
+            if (!name || !id) {
+                alert("Please enter both name and ID.");
+                return;
+            }
+
+            sessionStorage.setItem("studentName", name);
+            sessionStorage.setItem("studentId", id);
+
+            isPreview = false;
+            startQuiz();
+        };
+
+        // ======================================================================================
+        // 14. EXPORT BUTTON – DOWNLOAD ALL RESULTS AS EXCEL
+        // ======================================================================================
+
+        document.getElementById("exportBtn").onclick = async () => {
+            try {
+                const snap = await db.ref("quizResults").once("value");
+                const value = snap.val();
+
+                if (!value) {
+                    alert("No quiz results found in database.");
+                    return;
+                }
+
+                const data = Object.values(value);
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Results");
+                XLSX.writeFile(wb, `QuizResults-${Date.now()}.xlsx`);
+            } catch (e) {
+                console.error(e);
+                alert("Failed to export results.");
+            }
+        };
+
+        // ======================================================================================
+        // 15. CLEAR BUTTON – DELETE ALL RESULTS FROM FIREBASE
+        // ======================================================================================
+
+        document.getElementById("clearBtn").onclick = () => {
+            if (!confirm("Are you sure you want to delete ALL quiz results?")) {
+                return;
+            }
+            db.ref("quizResults").remove()
+                .then(() => {
+                    alert("All results cleared from database.");
+                })
+                .catch((err) => {
+                    console.error(err);
+                    alert("Failed to clear results.");
+                });
+        };
+
+        // ======================================================================================
+        // END OF SCRIPT
+        // ======================================================================================
+    </script>
+</body>
+
+</html>
